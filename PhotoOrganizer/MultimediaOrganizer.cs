@@ -92,7 +92,7 @@ namespace PhotoOrganizer
                         {
                             Console.WriteLine();
                             str = (string.Format("{0}: {1}: {2}: {3}", fi.Name, fi.CreationTime, fi.LastAccessTime, fi.Length) + Environment.NewLine);
-                            CopyToTarget(destinationDir.Text, fi);
+                            CopyToTarget(destinationDir.Text, fi, txtExtn.Text);
                             fileCount += 1;
                             return "Success!";
                         }
@@ -134,8 +134,15 @@ namespace PhotoOrganizer
             try
             {
                 DirectoryInfo di = new DirectoryInfo(sFullPath);
-                FileInfo[] files = di.GetFiles();
-
+                FileInfo[] files;
+                if (string.IsNullOrEmpty(txtExtn.Text))
+                {
+                    files = di.GetFiles();
+                }
+                else
+                {
+                    files = di.GetFiles("*" + txtExtn.Text);
+                }
                 foreach (FileInfo file in files)
                     fileInfoList.Add(file);
 
@@ -153,23 +160,24 @@ namespace PhotoOrganizer
             }
         }
 
-        private void CopyToTarget(string destnDir, FileInfo fi)
+        private void CopyToTarget(string destnDir, FileInfo fi, string extn)
         {
             try
             {
                 DateTime dt = fi.LastWriteTime;
+                if (fi.Extension.ToUpper() != extn.ToUpper()) return;
                 CultureInfo ci = Thread.CurrentThread.CurrentCulture;
                 string monthName1 = ci.DateTimeFormat.GetMonthName(dt.Month);
                 string monthName2 = ci.DateTimeFormat.GetAbbreviatedMonthName(dt.Month);
                 string destinationPath = string.Empty; string monthNumber = string.Empty;
                 if (dt.Month > 9) monthNumber = dt.Month.ToString(); else monthNumber = "0" + dt.Month.ToString();
-                destinationPath = destnDir + "/" + dt.Year.ToString() + "/" + monthNumber + monthName2;
+                destinationPath = destnDir + "/" + extn.Substring(1) + "/" + dt.Year.ToString() + "/" + monthNumber + monthName2;
                 if (!Directory.Exists(destinationPath))
                 {
                     Directory.CreateDirectory(destinationPath);
                 }
                 fi.MoveTo(destinationPath + "/" + fi.Name);
-                fi.CopyTo(destinationPath + "/" + fi.Name, true);
+                //fi.CopyTo(destinationPath + "/" + fi.Name, true);
                 string srcDir = fi.DirectoryName;
             }
             catch (Exception exp)
